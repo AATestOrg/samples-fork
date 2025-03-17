@@ -1,0 +1,32 @@
+
+name: Harden Security
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - master
+      - 'release/**'
+  pull_request:
+
+jobs:
+  validate-sha:
+    name: Validate SHA Pinning
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Validate GitHub Actions SHA Pinning
+        shell: bash
+        run: |
+          echo "Scanning .github/workflows for non-SHA pinned actions..."
+          MATCHES=$(grep -RP "uses: .+@(?![0-9a-fA-F]{40}\b)" .github/workflows || true)
+          if [ -n "$MATCHES" ]; then
+              echo "Non-SHA pinned action references found:"
+              echo "$MATCHES"
+              exit 1
+          else
+              echo "All GitHub Actions references are properly pinned to SHAs."
+          fi
